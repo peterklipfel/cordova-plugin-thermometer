@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-package org.dartlang.phonegap.barometer;
+package org.dartlang.phonegap.thermometer;
 
 import java.util.List;
 
@@ -25,40 +25,40 @@ import android.os.Handler;
 import android.os.Looper;
 
 /**
- * This class listens to the barometer sensor and stores the latest
- * pressure value.
+ * This class listens to the thermometer sensor and stores the latest
+ * temperature value.
  */
-public class BarometerListener extends CordovaPlugin implements SensorEventListener {
+public class ThermometerListener extends CordovaPlugin implements SensorEventListener {
 
     public static int STOPPED = 0;
     public static int STARTING = 1;
     public static int RUNNING = 2;
     public static int ERROR_FAILED_TO_START = 3;
    
-    private float pressure;  // most recent pressure value
+    private float temperature;  // most recent temperature value
     private long timestamp;  // time of most recent value
     private int status;  // status of listener
     private int accuracy = SensorManager.SENSOR_STATUS_UNRELIABLE;
 
     private SensorManager sensorManager;  // Sensor manager
-    private Sensor mSensor;  // Pressure sensor returned by sensor manager
+    private Sensor mSensor;  // Temperature sensor returned by sensor manager
 
     private CallbackContext callbackContext;  // Keeps track of the JS callback context.
 
     private Handler mainHandler=null;
     private Runnable mainRunnable = new Runnable() {
         public void run() {
-            BarometerListener.this.timeout();
+            ThermometerListener.this.timeout();
         }
     };
 
     /**
-     * Create an barometer listener.
+     * Create an thermometer listener.
      */
-    public BarometerListener() {
-        this.pressure = 0;
+    public ThermometerListener() {
+        this.temperature = 0;
         this.timestamp = 0;
-        this.setStatus(BarometerListener.STOPPED);
+        this.setStatus(ThermometerListener.STOPPED);
      }
 
     /**
@@ -85,14 +85,14 @@ public class BarometerListener extends CordovaPlugin implements SensorEventListe
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
         if (action.equals("start")) {
             this.callbackContext = callbackContext;
-            if (this.status != BarometerListener.RUNNING) {
+            if (this.status != ThermometerListener.RUNNING) {
                 // If not running, then this is an async call, so don't worry about waiting
                 // We drop the callback onto our stack, call start, and let start and the sensor callback fire off the callback down the road
                 this.start();
             }
         }
         else if (action.equals("stop")) {
-            if (this.status == BarometerListener.RUNNING) {
+            if (this.status == ThermometerListener.RUNNING) {
                 this.stop();
             }
         } else {
@@ -107,7 +107,7 @@ public class BarometerListener extends CordovaPlugin implements SensorEventListe
     }
 
     /**
-     * Called by BarometerBroker when listener is to be shut down.
+     * Called by ThermometerBroker when listener is to be shut down.
      * Stop listener.
      */
     public void onDestroy() {
@@ -119,29 +119,29 @@ public class BarometerListener extends CordovaPlugin implements SensorEventListe
     //--------------------------------------------------------------------------
     //
     /**
-     * Start listening for pressure sensor.
+     * Start listening for temperature sensor.
      * 
      * @return          status of listener
     */
     private int start() {
         // If already starting or running, then just return
-        if ((this.status == BarometerListener.RUNNING) || (this.status == BarometerListener.STARTING)) {
+        if ((this.status == ThermometerListener.RUNNING) || (this.status == ThermometerListener.STARTING)) {
             return this.status;
         }
 
-        this.setStatus(BarometerListener.STARTING);
+        this.setStatus(ThermometerListener.STARTING);
 
-        // Get barometer from sensor manager
-        List<Sensor> list = this.sensorManager.getSensorList(Sensor.TYPE_PRESSURE);
+        // Get thermometer from sensor manager
+        List<Sensor> list = this.sensorManager.getSensorList(Sensor.TYPE_TEMPERATURE);
 
         // If found, then register as listener
         if ((list != null) && (list.size() > 0)) {
           this.mSensor = list.get(0);
           this.sensorManager.registerListener(this, this.mSensor, SensorManager.SENSOR_DELAY_UI);
-          this.setStatus(BarometerListener.STARTING);
+          this.setStatus(ThermometerListener.STARTING);
         } else {
-          this.setStatus(BarometerListener.ERROR_FAILED_TO_START);
-          this.fail(BarometerListener.ERROR_FAILED_TO_START, "No sensors found to register barometer listening to.");
+          this.setStatus(ThermometerListener.ERROR_FAILED_TO_START);
+          this.fail(ThermometerListener.ERROR_FAILED_TO_START, "No sensors found to register thermometer listening to.");
           return this.status;
         }
 
@@ -158,14 +158,14 @@ public class BarometerListener extends CordovaPlugin implements SensorEventListe
         }
     }
     /**
-     * Stop listening to barometer sensor.
+     * Stop listening to thermometer sensor.
      */
     private void stop() {
         stopTimeout();
-        if (this.status != BarometerListener.STOPPED) {
+        if (this.status != ThermometerListener.STOPPED) {
             this.sensorManager.unregisterListener(this);
         }
-        this.setStatus(BarometerListener.STOPPED);
+        this.setStatus(ThermometerListener.STOPPED);
         this.accuracy = SensorManager.SENSOR_STATUS_UNRELIABLE;
     }
 
@@ -175,9 +175,9 @@ public class BarometerListener extends CordovaPlugin implements SensorEventListe
      * Called two seconds after starting the listener.
      */
     private void timeout() {
-        if (this.status == BarometerListener.STARTING) {
-            this.setStatus(BarometerListener.ERROR_FAILED_TO_START);
-            this.fail(BarometerListener.ERROR_FAILED_TO_START, "Barometer could not be started.");
+        if (this.status == ThermometerListener.STARTING) {
+            this.setStatus(ThermometerListener.ERROR_FAILED_TO_START);
+            this.fail(ThermometerListener.ERROR_FAILED_TO_START, "Thermometer could not be started.");
         }
     }
 
@@ -188,13 +188,13 @@ public class BarometerListener extends CordovaPlugin implements SensorEventListe
      * @param accuracy
      */
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Only look at barometer events
-        if (sensor.getType() != Sensor.TYPE_PRESSURE) {
+        // Only look at thermometer events
+        if (sensor.getType() != Sensor.TYPE_TEMPERATURE) {
             return;
         }
 
         // If not running, then just return
-        if (this.status == BarometerListener.STOPPED) {
+        if (this.status == ThermometerListener.STOPPED) {
             return;
         }
         this.accuracy = accuracy;
@@ -206,22 +206,22 @@ public class BarometerListener extends CordovaPlugin implements SensorEventListe
      * @param SensorEvent event
      */
     public void onSensorChanged(SensorEvent event) {
-        // Only look at barometer events
-        if (event.sensor.getType() != Sensor.TYPE_PRESSURE) {
+        // Only look at thermometer events
+        if (event.sensor.getType() != Sensor.TYPE_TEMPERATURE) {
             return;
         }
 
         // If not running, then just return
-        if (this.status == BarometerListener.STOPPED) {
+        if (this.status == ThermometerListener.STOPPED) {
             return;
         }
-        this.setStatus(BarometerListener.RUNNING);
+        this.setStatus(ThermometerListener.RUNNING);
 
         if (this.accuracy >= SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM) {
 
             // Save time that event was received
             this.timestamp = System.currentTimeMillis();
-            this.pressure = event.values[0];
+            this.temperature = event.values[0];
 
             this.win();
         }
@@ -232,7 +232,7 @@ public class BarometerListener extends CordovaPlugin implements SensorEventListe
      */
     @Override
     public void onReset() {
-        if (this.status == BarometerListener.RUNNING) {
+        if (this.status == ThermometerListener.RUNNING) {
             this.stop();
         }
     }
@@ -254,7 +254,7 @@ public class BarometerListener extends CordovaPlugin implements SensorEventListe
 
     private void win() {
         // Success return object
-        PluginResult result = new PluginResult(PluginResult.Status.OK, this.getPressureJSON());
+        PluginResult result = new PluginResult(PluginResult.Status.OK, this.getTemperatureJSON());
         result.setKeepCallback(true);
         callbackContext.sendPluginResult(result);
     }
@@ -262,10 +262,10 @@ public class BarometerListener extends CordovaPlugin implements SensorEventListe
     private void setStatus(int status) {
         this.status = status;
     }
-    private JSONObject getPressureJSON() {
+    private JSONObject getTemperatureJSON() {
         JSONObject r = new JSONObject();
         try {
-            r.put("val", this.pressure);
+            r.put("val", this.temperature);
             r.put("timestamp", this.timestamp);
         } catch (JSONException e) {
             e.printStackTrace();

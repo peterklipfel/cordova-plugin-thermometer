@@ -3,46 +3,46 @@
 // BSD-style license that can be found in the LICENSE file.
 
 /**
- * This class provides access to device barometer data.
+ * This class provides access to device thermometer data.
  * @constructor
  */
 var argscheck = require('cordova/argscheck'),
     utils = require("cordova/utils"),
     exec = require("cordova/exec"),
-    Acceleration = require('./Pressure');
+    Acceleration = require('./Temperature');
 
-// Is the barometer sensor running?
+// Is the thermometer sensor running?
 var running = false;
 
-// Keeps reference to watchPressure calls.
+// Keeps reference to watchTemperature calls.
 var timers = {};
 
 // Array of listeners; used to keep track of when we should call start and stop.
 var listeners = [];
 
-// Last returned pressure object from native
-var pressure = null;
+// Last returned temperature object from native
+var temperature = null;
 
 // Tells native to start.
 function start() {
     exec(function(a) {
         var tempListeners = listeners.slice(0);
-        pressure = new Pressure(a.val, a.timestamp);
+        temperature = new Temperature(a.val, a.timestamp);
         for (var i = 0, l = tempListeners.length; i < l; i++) {
-            tempListeners[i].win(pressure);
+            tempListeners[i].win(temperature);
         }
     }, function(e) {
         var tempListeners = listeners.slice(0);
         for (var i = 0, l = tempListeners.length; i < l; i++) {
             tempListeners[i].fail(e);
         }
-    }, "Barometer", "start", []);
+    }, "Thermometer", "start", []);
     running = true;
 }
 
 // Tells native to stop.
 function stop() {
-    exec(null, null, "Barometer", "stop", []);
+    exec(null, null, "Thermometer", "stop", []);
     running = false;
 }
 
@@ -62,16 +62,16 @@ function removeListeners(l) {
     }
 }
 
-var barometer = {
+var thermometer = {
     /**
-     * Asynchronously acquires the current pressure.
+     * Asynchronously acquires the current temperature.
      *
-     * @param {Function} successCallback    The function to call when the pressure data is available
-     * @param {Function} errorCallback      The function to call when there is an error getting the pressure data. (OPTIONAL)
-     * @param {BarometerOptions} options    The options for getting the barometer data such as frequency. (OPTIONAL)
+     * @param {Function} successCallback    The function to call when the temperature data is available
+     * @param {Function} errorCallback      The function to call when there is an error getting the temperature data. (OPTIONAL)
+     * @param {ThermometerOptions} options    The options for getting the thermometer data such as frequency. (OPTIONAL)
      */
-    getCurrentPressure: function(successCallback, errorCallback, options) {
-        argscheck.checkArgs('fFO', 'barometer.getCurrentPressure', arguments);
+    getCurrentTemperature: function(successCallback, errorCallback, options) {
+        argscheck.checkArgs('fFO', 'thermometer.getCurrentTemperature', arguments);
 
         var p;
         var win = function(a) {
@@ -92,19 +92,19 @@ var barometer = {
     },
 
     /**
-     * Asynchronously acquires the pressure repeatedly at a given interval.
+     * Asynchronously acquires the temperature repeatedly at a given interval.
      *
-     * @param {Function} successCallback    The function to call each time the pressure data is available
-     * @param {Function} errorCallback      The function to call when there is an error getting the pressure data. (OPTIONAL)
-     * @param {BarometerOptions} options    The options for getting the barometer data such as frequency. (OPTIONAL)
+     * @param {Function} successCallback    The function to call each time the temperature data is available
+     * @param {Function} errorCallback      The function to call when there is an error getting the temperature data. (OPTIONAL)
+     * @param {ThermometerOptions} options    The options for getting the thermometer data such as frequency. (OPTIONAL)
      * @return String                       The watch id that must be passed to #clearWatch to stop watching.
      */
-    watchPressure: function(successCallback, errorCallback, options) {
-        argscheck.checkArgs('fFO', 'barometer.watchPressure', arguments);
+    watchTemperature: function(successCallback, errorCallback, options) {
+        argscheck.checkArgs('fFO', 'thermometer.watchTemperature', arguments);
         // Default interval (10 sec)
         var frequency = (options && options.frequency && typeof options.frequency == 'number') ? options.frequency : 10000;
 
-        // Keep reference to watch id, and report pressure readings as often as defined in frequency
+        // Keep reference to watch id, and report temperature readings as often as defined in frequency
         var id = utils.createUUID();
 
         var p = createCallbackPair(function(){}, function(e) {
@@ -115,8 +115,8 @@ var barometer = {
 
         timers[id] = {
             timer:window.setInterval(function() {
-                if (pressure) {
-                    successCallback(pressure);
+                if (temperature) {
+                    successCallback(temperature);
                 }
             }, frequency),
             listeners:p
@@ -125,8 +125,8 @@ var barometer = {
         if (running) {
             // If we're already running then immediately invoke the success callback
             // but only if we have retrieved a value, sample code does not check for null ...
-            if (pressure) {
-                successCallback(pressure);
+            if (temperature) {
+                successCallback(temperature);
             }
         } else {
             start();
@@ -136,9 +136,9 @@ var barometer = {
     },
 
     /**
-     * Clears the specified barometer watch.
+     * Clears the specified thermometer watch.
      *
-     * @param {String} id       The id of the watch returned from #watchPressure.
+     * @param {String} id       The id of the watch returned from #watchTemperature.
      */
     clearWatch: function(id) {
         // Stop javascript timer & remove from timer list
@@ -149,4 +149,4 @@ var barometer = {
         }
     }
 };
-module.exports = barometer;
+module.exports = thermometer;
