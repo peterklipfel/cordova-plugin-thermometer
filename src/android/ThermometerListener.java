@@ -132,7 +132,7 @@ public class ThermometerListener extends CordovaPlugin implements SensorEventLis
         this.setStatus(ThermometerListener.STARTING);
 
         // Get thermometer from sensor manager
-        List<Sensor> list = this.sensorManager.getSensorList(Sensor.TYPE_TEMPERATURE);
+        List<Sensor> list = this.sensorManager.getSensorList(Sensor.TYPE_AMBIENT_TEMPERATURE);
 
         // If found, then register as listener
         if ((list != null) && (list.size() > 0)) {
@@ -189,7 +189,7 @@ public class ThermometerListener extends CordovaPlugin implements SensorEventLis
      */
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         // Only look at thermometer events
-        if (sensor.getType() != Sensor.TYPE_TEMPERATURE) {
+        if (sensor.getType() != Sensor.TYPE_AMBIENT_TEMPERATURE) {
             return;
         }
 
@@ -207,7 +207,7 @@ public class ThermometerListener extends CordovaPlugin implements SensorEventLis
      */
     public void onSensorChanged(SensorEvent event) {
         // Only look at thermometer events
-        if (event.sensor.getType() != Sensor.TYPE_TEMPERATURE) {
+        if (event.sensor.getType() != Sensor.TYPE_AMBIENT_TEMPERATURE) {
             return;
         }
 
